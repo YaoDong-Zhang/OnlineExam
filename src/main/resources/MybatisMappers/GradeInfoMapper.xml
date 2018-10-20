@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.GradeInfoDao">
+    <resultMap id="GradeResultMap" type="GradeInfo">
+        <id property="gradeId" column="gradeId"/>
+        <result property="gradeName" column="gradeName"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="GradeResultMap">
+        select * from gradeinfo;
+    </select>
+
+    <insert id="AddGrade" parameterType="GradeInfo">
+        insert into gradeinfo(gradeName) values (#{gradeName})
+    </insert>
+
+    <update id="updateGrade" parameterType="GradeInfo">
+        update gradeinfo set gradeName = #{gradeName} where gradeId = #{gradeId};
+    </update>
+
+    <select id="findById" parameterType="integer" resultMap="GradeResultMap">
+        select * from gradeinfo where gradeId = #{gradeId}
+    </select>
+
+    <delete id="delGrade" parameterType="integer">
+        delete from gradeinfo where gradeId = #{gradeId}
+    </delete>
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.ExamPaperDao">
+    <resultMap id="ExamPaperResultMap" type="ExamPaperInfo">
+        <id property="examPaperId" column="examPaperId"/>
+        <result property="examPaperName" column="examPaperName"/>
+        <result property="subjectNum" column="subjectNum"/>
+        <result property="examPaperTime" column="examPaperTime"/>
+        <result property="examPaperScore" column="examPaperScore"/>
+        <result property="division" column="division"/>
+        <result property="examPaperEasy" column="examPaperEasy"/>
+        <association property="grade" javaType="GradeInfo">
+            <id property="gradeId" column="gradeId"/>
+            <result property="gradeName" column="gradeName"/>
+        </association>
+    </resultMap>
+
+    <parameterMap type="java.util.Map" id="ExamPaperParameterMap">
+        <parameter property="examPaper" resultMap="ExamPaperResultMap"/>
+        <parameter property="startIndex" resultMap="ExamPaperResultMap"/>
+        <parameter property="pageShow" resultMap="ExamPaperResultMap"/>
+    </parameterMap>
+
+    <select id="findAll" parameterMap="ExamPaperParameterMap" resultMap="ExamPaperResultMap">
+        SELECT a.*,b.gradeName FROM ExamPaperInfo a INNER
+        JOIN GradeInfo b ON a.gradeId=b.gradeId
+        <where>
+            <if test="examPaper != null">
+                <if test="grade != null">
+                    a.gradeId=#{grade.gradeId}
+                </if>
+            </if>
+        </where>
+        <if test="startIndex != null and pageShow != null">
+            LIMIT #{startIndex}, #{pageShow}
+        </if>
+    </select>
+    <select id="examPaperSum" resultType="int">
+        select count(examPaperId) from exampaperinfo;
+    </select>
+
+    <update id="updateExamPaper" parameterType="ExamPaperInfo">
+        update exampaperinfo
+        set division=#{division},examPaperEasy=#{examPaperEasy},gradeId=#{grade.gradeId},
+        examPaperName=#{examPaperName},subjectNum=#{subjectNum},examPaperScore=#{examPaperScore},
+        examPaperTime=#{examPaperTime}
+        where examPaperId=#{examPaperId}
+    </update>
+
+    <insert id="addExamPaper" parameterType="ExamPaperInfo">
+        insert into exampaperinfo(examPaperName, subjectNum, examPaperTime, examPaperScore, gradeId,division,examPaperEasy)
+        values (#{examPaperName},#{subjectNum},#{examPaperTime},#{examPaperScore},#{grade.gradeId},#{division},#{examPaperEasy})
+    </insert>
+
+    <select id="findById" parameterType="integer" resultMap="ExamPaperResultMap">
+        select a.*,g.gradeName from exampaperinfo a
+        left join gradeinfo g on a.gradeId = g.gradeId
+        where a.examPaperId=#{examPaperId};
+    </select>
+
+    <delete id="delExamPaper" parameterType="integer">
+        delete from exampaperinfo where examPaperId=#{examPaperId};
+    </delete>
+
+    <!-- 修改试卷试题总量 -->
+    <update id="updateExamPaperSubjects" parameterType="java.util.Map">
+		update ExamPaperInfo set subjectNum=subjectNum+#{subjectNum}
+		where examPaperId=#{examPaperId}
+	</update>
+
+    <!-- 修改试卷总分 -->
+    <update id="updateExamPaperScore" parameterType="java.util.Map">
+		update ExamPaperInfo set examPaperScore=examPaperScore+#{score}
+		where examPaperId=#{examPaperId}
+	</update>
+
+    <select id="findExamPapers" resultMap="ExamPaperResultMap">
+        select a.*,b.gradeName from exampaperinfo a
+        left join gradeinfo b on b.gradeId=a.gradeId;
+    </select>
+
+    <select id="maxPaperId" resultType="int">
+        select max(examPaperId) from exampaperinfo;
+    </select>
+
+</mapper>

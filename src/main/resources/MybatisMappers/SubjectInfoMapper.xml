@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.SubjectInfoDao">
+    <resultMap id="SubjectInfoResultMap" type="SubjectInfo">
+        <id property="subjectId" column="subjectId"/>
+        <result property="subjectName" column="subjectName"/>
+        <result property="optionA" column="optionA"/>
+        <result property="optionB" column="optionB"/>
+        <result property="optionC" column="optionC"/>
+        <result property="optionD" column="optionD"/>
+        <result property="rightResult" column="rightResult"/>
+        <result property="subjectScore" column="subjectScore"/>
+        <result property="subjectType" column="subjectType"/>
+        <result property="subjectEasy" column="subjectEasy"/>
+        <result property="division" column="division"/>
+        <association property="course" javaType="CourseInfo">
+            <id property="courseId" column="courseId"/>
+            <result property="courseName" column="courseName"/>
+        </association>
+        <association property="grade" javaType="GradeInfo">
+            <id property="gradeId" column="gradeId"/>
+            <result property="gradeName" column="gradeName"/>
+        </association>
+    </resultMap>
+
+    <parameterMap id="subjectsParameterMap" type="map">
+        <parameter property="subject" resultMap="SubjectInfoResultMap"/>
+        <parameter property="startIndex" resultMap="SubjectInfoResultMap"/>
+        <parameter property="pageShow" resultMap="SubjectInfoResultMap"/>
+    </parameterMap>
+
+    <sql id="querySubjectSql">
+		select a.*, b.courseName, c.gradeName from SubjectInfo a
+		inner join CourseInfo b on a.courseId=b.courseId
+		inner join GradeInfo c on a.gradeId=c.gradeId
+	</sql>
+
+    <select id="findAll" parameterMap="subjectsParameterMap" resultMap="SubjectInfoResultMap">
+        <include refid="querySubjectSql"></include>
+        <where>
+            <if test="subject != null">
+                <if test="subject.subjectId != null">
+                    subjectId=#{subjectId}
+                </if>
+                <if test="subject.course != null">
+                    OR a.courseId=#{subject.course.courseId}
+                </if>
+                <if test="subject.grade != null">
+                    OR a.gradeId=#{subject.grade.gradeId}
+                </if>
+            </if>
+        </where>
+        <if test="startIndex != null and pageShow != null">
+            limit #{startIndex}, #{pageShow}
+        </if>
+    </select>
+
+    <select id="subjectSum" resultType="int">
+        select count(subjectId) from subjectinfo;
+    </select>
+
+    <select id="findById" resultMap="SubjectInfoResultMap">
+        <include refid="querySubjectSql"></include>
+        where subjectId=#{subjectId}
+    </select>
+
+    <!-- 添加试题 -->
+    <insert id="addSubject" parameterType="online.exam.pojo.SubjectInfo" useGeneratedKeys="true"
+            keyProperty="subjectId">
+		INSERT INTO SubjectInfo VALUES
+		(NULL, #{subjectName}, #{optionA}, #{optionB}, #{optionC}, #{optionD}, #{rightResult}, #{subjectScore}, #{subjectType}, #{course.courseId}, #{grade.gradeId}, #{subjectEasy}, #{division})
+	</insert>
+
+    <!-- 批量添加试题 -->
+    <insert id="isAddSubjects" parameterType="java.util.Map">
+        INSERT INTO SubjectInfo(subjectName, optionA, optionB, optionC, optionD, rightResult, subjectScore, subjectType,
+        ,courseId, gradeId, subjectEasy, division)
+        VALUES
+        <if test="subjects != null">
+            <foreach collection="subjects" item="subject" separator=",">
+                (#{subject.subjectName}, #{subject.optionA}, #{subject.optionB}, #{subject.optionC}, #{subject.optionD},
+                #{subject.rightResult}, #{subject.subjectScore}, #{subject.subjectType}, #{subject.course.courseId},
+                #{subject.grade.gradeId}, #{subject.subjectEasy}, #{subject.division})
+            </foreach>
+        </if>
+    </insert>
+
+    <update id="updateSubject" parameterType="SubjectInfo">
+        update subjectinfo
+        set subjectName=#{subjectName}, optionA=#{optionA}, optionB=#{optionB}, optionC=#{optionC}, optionD=#{optionD}, rightResult=#{rightResult}, subjectScore=#{subjectScore}, subjectType=#{subjectType}, courseId=#{course.courseId}, gradeId=#{grade.gradeId}, subjectEasy=#{subjectEasy}, division=#{division}
+        where subjectId=#{subjectId};
+    </update>
+
+    <delete id="delSubject" parameterType="integer">
+        delete from subjectinfo where subjectId=#{subjectId};
+    </delete>
+
+</mapper>

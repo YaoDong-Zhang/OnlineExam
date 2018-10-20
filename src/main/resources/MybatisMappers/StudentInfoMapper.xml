@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.StudentInfoDao">
+    <resultMap type="online.exam.pojo.StudentInfo" id="queryStudent">
+        <id column="studentId" property="studentId"/>
+        <result column="studentName" property="studentName"/>
+        <result column="studentAccount" property="studentAccount"/>
+        <result column="studentPwd" property="studentPwd"/>
+        <!-- 班级 -->
+        <association property="classInfo" javaType="online.exam.pojo.ClassInfo">
+            <id column="classId" property="classId"/>
+            <result column="className" property="className"/>
+        </association>
+        <!-- 年级 -->
+        <association property="grade" javaType="online.exam.pojo.GradeInfo">
+            <id column="gradeId" property="gradeId"/>
+            <result column="gradeName" property="gradeName"/>
+        </association>
+    </resultMap>
+
+    <parameterMap type="java.util.Map" id="getStudentParameterMap">
+        <parameter property="student" resultMap="queryStudent"/>
+        <parameter property="startIndex" resultMap="queryStudent"/>
+        <parameter property="pageShow" resultMap="queryStudent"/>
+    </parameterMap>
+
+    <select id="findByAccount" parameterType="string" resultMap="queryStudent">
+        select a.*,b.className,c.gradeId,c.gradeName from studentinfo a
+        inner join classinfo b on b.classid = a.classid
+        inner join gradeinfo c on b.gradeid = c.gradeid
+        where a.studentAccount = #{value}
+    </select>
+    <insert id="insert" parameterType="StudentInfo">
+        insert into studentinfo(studentName, studentAccount, studentPwd, classId) value
+        (#{studentName},#{studentAccount},#{studentPwd},#{classInfo.classId})
+    </insert>
+    <select id="findByID" parameterType="integer" resultMap="queryStudent">
+        select a.*,b.className,c.gradeId,c.gradeName from StudentInfo a
+		inner join ClassInfo b on a.classId=b.classId
+		inner join GradeInfo c on b.gradeId=c.gradeId
+		where a.studentId=#{studentId}
+    </select>
+    <update id="resetPwd" parameterType="StudentInfo">
+        update StudentInfo set
+		studentPwd=#{studentPwd}
+		where studentId=#{studentId}
+    </update>
+
+    <select id="findAll" parameterMap="getStudentParameterMap" resultMap="queryStudent">
+        select * from studentinfo s
+        left join classinfo c on s.classId = c.classId
+        left join gradeinfo g on c.gradeId = g.gradeId
+        <where>
+            <if test="studentId != null">
+                studentId=#{studentId}
+            </if>
+            <if test="classInfo != null">
+                <if test="classInfo.classId != null">
+                    b.classId=#{classInfo.classId}
+                </if>
+            </if>
+            <if test="grade != null">
+                <if test="grade.gradeId != null">
+                    c.gradeId=#{grade.gradeId}
+                </if>
+            </if>
+        </where>
+        <if test="startIndex != null and pageShow != null">
+            limit #{startIndex}, #{pageShow}
+        </if>
+    </select>
+    <select id="stuSum" resultType="int">
+        select count(studentId) from studentinfo;
+    </select>
+
+    <update id="updateStu" parameterType="StudentInfo">
+        update studentinfo
+        set studentName=#{studentName},studentAccount=#{studentAccount},studentPwd=#{studentPwd},classId=#{classInfo.classId}
+        where studentId=#{studentId};
+    </update>
+
+    <delete id="delStu" parameterType="integer">
+        delete from studentinfo where studentId=#{studentId};
+    </delete>
+
+    <select id="findByClassId" parameterType="int" resultType="online.exam.pojo.StudentInfo">
+      select studentId,studentName from StudentInfo where classId=#{classId};
+    </select>
+
+</mapper>

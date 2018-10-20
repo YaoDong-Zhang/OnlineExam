@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.ExamPlanInfoDao">
+    <resultMap type="online.exam.pojo.ExamPlanInfo" id="queryExamPlanResultMap">
+        <id column="examPlanId" property="examPlanId"/>
+        <result column="beginTime" property="beginTime"/>
+        <association property="course" javaType="online.exam.pojo.CourseInfo">
+            <id column="courseId" property="courseId"/>
+            <result column="courseName" property="courseName"/>
+        </association>
+        <association property="clazz" javaType="online.exam.pojo.ClassInfo">
+            <id column="classId" property="classId"/>
+            <result column="className" property="className"/>
+        </association>
+        <association property="examPaper" javaType="online.exam.pojo.ExamPaperInfo">
+            <id column="examPaperId" property="examPaperId"/>
+            <result column="examPaperName" property="examPaperName"/>
+            <result column="subjectNum" property="subjectNum"/>
+            <result column="examPaperTime" property="examPaperTime"/>
+        </association>
+    </resultMap>
+    <select id="findAll" parameterType="java.util.Map" resultMap="queryExamPlanResultMap">
+        select a.*,b.courseName,c.className,d.examPaperName,d.subjectNum,d.examPaperTime FROM ExamPlanInfo a
+        inner join CourseInfo b on a.courseId=b.courseId
+        inner join ClassInfo c on a.classId=c.classId
+        inner join ExamPaperInfo d on a.examPaperId=d.examPaperId
+        <where>
+            <if test="courseId != null">
+                a.courseId=#{courseId}
+            </if>
+            <if test="examPaperId != null">
+                or a.examPaperId=#{examPaperId}
+            </if>
+            <if test="classId != null">
+                or a.classId=#{classId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addExamPlan" parameterType="ExamPlanInfo">
+        insert into ExamPlanInfo values(null, #{course.courseId}, #{clazz.classId}, #{examPaper.examPaperId}, #{beginTime});
+    </insert>
+
+    <update id="upadteExamPlan" parameterType="ExamPlanInfo">
+        update ExamPlanInfo set courseId=#{course.courseId}, classId=#{clazz.classId}, examPaperId=#{examPaper.examPaperId},beginTime=#{beginTime}
+		where examPlanId=#{examPlanId};
+    </update>
+
+    <!-- 移除过期考试安排 -->
+    <delete id="delExamPlan" parameterType="integer">
+		delete from ExamPlanInfo where examPlanId=#{examPlanId}
+	</delete>
+
+    <select id="findById" parameterType="integer" resultMap="queryExamPlanResultMap">
+		select a.*,b.courseName,c.className,d.examPaperName,d.subjectNum from ExamPlanInfo a
+		inner join CourseInfo b on a.courseId=b.courseId
+		inner join ClassInfo c on a.classId=c.classId
+		inner join ExamPaperInfo d on a.examPaperId=d.examPaperId
+		where a.examPlanId=#{examPlanId};
+	</select>
+
+
+    <resultMap type="online.exam.pojo.ExamPlanInfo" id="queryWillExam">
+        <id column="examPlanId" property="examPlanId"/>
+        <result column="beginTime" property="beginTime"/>
+        <!-- 科目 -->
+        <association property="course" javaType="online.exam.pojo.CourseInfo">
+            <id column="courseId" property="courseId"/>
+            <result column="courseName" property="courseName"/>
+        </association>
+        <!-- 班级 -->
+        <association property="clazz" javaType="online.exam.pojo.ClassInfo">
+            <id column="classId" property="classId"/>
+        </association>
+        <!-- 试卷 -->
+        <association property="examPaper" javaType="online.exam.pojo.ExamPaperInfo">
+            <id column="examPaperId" property="examPaperId"/>
+            <result column="examPaperName" property="examPaperName"/>
+            <result column="subjectNum" property="subjectNum"/>
+            <result column="examPaperScore" property="examPaperScore"/>
+            <result column="examPaperEasy" property="examPaperEasy"/>
+            <result column="examPaperTime" property="examPaperTime"/>
+        </association>
+    </resultMap>
+    <!-- 查询学生待考信息 -->
+    <select id="getStudentWillExam" parameterType="java.util.Map" resultMap="queryWillExam">
+		select a.*,d.exampaperName,d.subjectNum,d.examPaperScore,d.examPaperEasy,d.examPaperTime,e.courseName
+		from ExamPlanInfo a
+		inner join ClassInfo b on a.classId=b.classId
+		inner join GradeInfo c on b.gradeId=c.gradeId
+		inner join ExamPaperInfo d on a.examPaperId=d.examPaperId
+		inner join CourseInfo e on a.courseId=e.courseId
+		where a.classId=#{classId} and b.gradeId=#{gradeId}
+	</select>
+
+
+</mapper>

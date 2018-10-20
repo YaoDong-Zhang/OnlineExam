@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.CourseInfoDao">
+    <resultMap id="CourseResultMap" type="CourseInfo">
+        <id property="courseId" column="courseId"/>
+        <result property="courseName" column="courseName"/>
+        <result property="division" column="division"/>
+        <association property="grade" javaType="GradeInfo">
+            <id property="gradeId" column="gradeId"/>
+            <result property="gradeName" column="gradeName"/>
+        </association>
+    </resultMap>
+
+    <select id="findAll" parameterType="CourseInfo" resultMap="CourseResultMap">
+        select * from CourseInfo a
+        inner join GradeInfo b on a.gradeId=b.gradeId
+        <where>
+            <if test="grade != null">
+                <if test="grade.gradeId != null">
+                    gradeId=#{grade.gradeId}
+                </if>
+            </if>
+            <if test="division != null">
+                and division=#{division}
+            </if>
+        </where>
+        order by courseId desc;
+    </select>
+
+    <select id="findById" parameterType="integer" resultMap="CourseResultMap">
+        select * from courseinfo a left join gradeinfo g on a.gradeId = g.gradeId
+        where courseId=#{courseId};
+    </select>
+
+    <insert id="AddCourse" parameterType="CourseInfo">
+        insert into courseinfo(courseName, division, gradeId)
+        values(#{courseName},#{division},#{grade.gradeId});
+    </insert>
+
+    <update id="updateCourse" parameterType="CourseInfo">
+        update courseinfo set courseName=#{courseName},division=#{division},gradeId=#{grade.gradeId}
+        where courseId=#{courseId};
+    </update>
+
+    <delete id="delCourse" parameterType="integer">
+        delete from courseinfo where courseId=#{courseId};
+    </delete>
+
+</mapper>

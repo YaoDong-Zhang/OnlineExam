@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.ExamHistoryInfoDao">
+    <resultMap type="online.exam.pojo.ExamHistoryInfo" id="queryExamHistoryToTeacherResultMap">
+        <id column="historyId" property="historyId"/>
+        <result column="examScore" property="examScore"/>
+        <association property="examPaper" javaType="online.exam.pojo.ExamPaperInfo">
+            <id column="examPaperId" property="examPaperId"/>
+            <result column="examPaperName" property="examPaperName"/>
+            <result column="examPaperScore" property="examPaperScore"/>
+            <result column="subjectNum" property="subjectNum"/>
+        </association>
+        <association property="student" javaType="online.exam.pojo.StudentInfo">
+            <id column="studentId" property="studentId"/>
+            <result column="studentName" property="studentName"/>
+        </association>
+    </resultMap>
+    <!-- 查询考试历史信息，针对后台教师查询 -->
+    <select id="findExamHistoryToTeacher" resultMap="queryExamHistoryToTeacherResultMap">
+		select a.historyId,a.examScore,b.examPaperId,b.examPaperName,b.examPaperScore,b.subjectNum,d.studentId,d.studentName
+		from ExamHistoryInfo a
+		inner join examPaperInfo b on a.examPaperId=b.exampaperId
+		left join StudentInfo d on a.studentId=d.studentId;
+	</select>
+
+    <resultMap type="online.exam.pojo.ExamHistoryInfo" id="queryExamHistoryToStudentResultMap">
+        <id column="historyId" property="historyId"/>
+        <result column="examScore" property="examScore"/>
+        <association property="examPaper" javaType="online.exam.pojo.ExamPaperInfo">
+            <id column="examPaperId" property="examPaperId"/>
+            <result column="examPaperName" property="examPaperName"/>
+            <result column="examPaperScore" property="examPaperScore"/>
+            <result column="subjectNum" property="subjectNum"/>
+        </association>
+    </resultMap>
+
+    <!-- 查询考试历史信息，针对前台学生查询 -->
+    <select id="findExamHistoryToStudent" parameterType="integer" resultType="ExamHistoryPaper">
+		select a.historyId,a.examScore,b.examPaperId,b.examPaperName,b.examPaperScore,b.subjectNum,c.beginTime
+		from ExamHistoryInfo a
+		inner join examPaperInfo b on a.examPaperId=b.exampaperId
+		left join examPlanInfo c on b.examPaperId=c.examPaperId
+		where studentId=#{studentId};
+	</select>
+
+    <insert id="addExamHistory" parameterType="map">
+      insert into ExamHistoryInfo values (null, #{studentId}, #{examPaperId}, #{examScore});
+    </insert>
+
+    <select id="findHistoryInfoWithIds" parameterType="java.util.Map" resultType="int">
+		select count(*) from ExamHistoryInfo where studentId=#{studentId} and examPaperId=#{examPaperId};
+	</select>
+
+
+</mapper>

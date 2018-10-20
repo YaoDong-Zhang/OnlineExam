@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="online.exam.dao.ClassInfoDao">
+    <resultMap id="ClassResultMap" type="ClassInfo">
+        <id property="classId" column="classId"/>
+        <result property="className" column="className"/>
+        <association property="grade" javaType="GradeInfo">
+            <id property="gradeId" column="gradeId"/>
+            <result property="gradeName" column="gradeName"/>
+        </association>
+        <association property="teacher" javaType="TeacherInfo">
+            <id property="teacherId" column="teacherId"/>
+            <result property="teacherName" column="teacherName"/>
+        </association>
+    </resultMap>
+
+    <select id="findAll" parameterType="ClassInfo" resultMap="ClassResultMap">
+        SELECT * FROM ClassInfo a
+        LEFT JOIN TeacherInfo b ON a.teacherId=b.teacherId
+        LEFT JOIN GradeInfo c ON a.gradeId=c.gradeId
+        <where>
+            <!-- 需要先判断grade是否为空
+                如果不判断，且 grade 为空，那么判断 grade.gradeId 就会报错
+             -->
+            <if test="grade != null">
+                <if test="grade.gradeId != null">
+                    a.gradeId=#{grade.gradeId}
+                </if>
+            </if>
+            <if test="classId != null">
+                AND classId=#{classId}
+            </if>
+            <if test="className != null and className != ''">
+                AND className LIKE '%${className}%'
+            </if>
+        </where>
+    </select>
+
+    <select id="findByGradeId" parameterType="integer" resultMap="ClassResultMap">
+        select * from classinfo where gradeId = #{gradeId}
+    </select>
+
+    <select id="findById" parameterType="integer" resultMap="ClassResultMap">
+        select c.*,g.gradeName,t.teacherName from classinfo c
+        left join gradeinfo g on c.gradeId = g.gradeId
+        left join teacherinfo t on c.teacherId = t.teacherId
+        where classId=#{classId};
+    </select>
+
+    <insert id="addClass" parameterType="ClassInfo">
+        insert into classinfo(className, gradeId, teacherId)
+        values(#{className},#{grade.gradeId},#{teacher.teacherId});
+    </insert>
+
+    <update id="updateClass" parameterType="ClassInfo">
+        update classinfo
+        set className=#{className}, gradeId=#{grade.gradeId}, teacherId=#{teacher.teacherId}
+        where classId=#{classId};
+    </update>
+
+    <delete id="delClass" parameterType="integer">
+        delete from classinfo where classId=#{classId};
+    </delete>
+
+    <select id="findByTeacherId" parameterType="integer" resultMap="ClassResultMap">
+        select * from classinfo where teacherId=#{teacherId};
+    </select>
+
+    <update id="setTeacher" parameterType="integer">
+        update classinfo  set teacherId=null where classId=#{classId}
+    </update>
+
+    <!-- 获取各(指定年级下)班级下的学生总量 -->
+    <select id="getStudentCountForClass" parameterType="int" resultType="ClassInfo">
+        SELECT COUNT(studentId) AS classId, className
+        FROM StudentInfo a
+        INNER JOIN ClassInfo b ON a.`classId`=b.`classId`
+        INNER JOIN GradeInfo c ON b.`gradeId`=c.`gradeId`
+        <where>
+            <if test="_parameter != null">
+                c.`gradeId`=#{_parameter}
+            </if>
+        </where>
+        GROUP BY a.`classId`;
+    </select>
+
+</mapper>
